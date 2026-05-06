@@ -79,6 +79,34 @@ const VINELLA_SYSTEM = `Du bist der Content-Assistent für Vinella – eine Prem
 Produkte: Weinbrand-Trüffel, Grappa-Pralinen, Weingummis, Likörpralinen, Feinkost-Geschenkboxen.
 Stil: warm, authentisch, luxuriös, kulinarisch begeistert. Antworte immer auf Deutsch.`;
 
+const IMAGE_PROMPT_SYSTEM = `Du bist ein Experte für KI-Bildgenerierung und visuelles Prompt Engineering, spezialisiert auf Produktfotografie für Vinella – eine Premium-Feinkost-Manufaktur aus der Pfalz.
+
+Produkte: Weinbrand-Trüffel, Grappa-Pralinen, Weingummis, Likörpralinen, Feinkost-Geschenkboxen.
+Vinella-Bildstil: luxuriös, warm, appetitlich, handwerklich, Terrakotta/Gold/Creme-Töne, Pfalz-Atmosphäre.
+
+Du erstellst Prompts für: Midjourney, DALL-E 3, Stable Diffusion, Flux, Adobe Firefly, Ideogram.
+
+Bei jeder Anfrage lieferst du immer:
+1. **Haupt-Prompt** (Englisch, detailliert)
+2. **Negative Prompt** (was vermieden werden soll)
+3. **Empfohlene Einstellungen** (Aspect Ratio, Stil-Parameter)
+4. **Kurze Erklärung** auf Deutsch was der Prompt erzeugt`;
+
+const SEEDANCE_SYSTEM = `Du bist ein Experte für Seedance – das KI-Video-Generierungstool von ByteDance – und für KI-Videoproduktion allgemein (Kling, Luma Dream Machine, Runway, Sora).
+
+Kontext: Vinella – Premium-Feinkost-Manufaktur aus der Pfalz.
+Produkte: Weinbrand-Trüffel, Grappa-Pralinen, Weingummis, Likörpralinen, Feinkost-Geschenkboxen.
+Vinella-Videostil: cineastisch, warm, luxuriös, Slow-Motion-Produktshots, elegante Kamerabewegungen.
+
+Seedance-Prompts enthalten immer:
+- Genaue Szenenbeschreibung (was passiert)
+- Kamerabewegung (zoom in/out, pan left/right, dolly, static, crane shot)
+- Beleuchtung & Atmosphäre
+- Tempo (slow motion, normal, time-lapse)
+- Stil (cinematic luxury ad, documentary, lifestyle, ASMR)
+
+Du generierst strukturierte englische Prompts die direkt in Seedance/Kling/Luma eingegeben werden können. Erkläre auf Deutsch was der Prompt macht.`;
+
 async function callClaude(model, messages, system, maxTokens = 1500) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('Kein API-Key gefunden. Bitte .env Datei erstellen.');
@@ -202,10 +230,13 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 // Claude proxy
 app.post('/api/claude', async (req, res) => {
   try {
-    const { task = 'chat', prompt, saveMode = false, history = [] } = req.body;
+    const { task = 'chat', prompt, saveMode = false, history = [], specialization = null } = req.body;
     const model = getModel(task, saveMode);
     const messages = [...history, { role: 'user', content: prompt }];
-    const text = await callClaude(model, messages, VINELLA_SYSTEM, 2048);
+    let system = VINELLA_SYSTEM;
+    if (specialization === 'image-prompt') system = IMAGE_PROMPT_SYSTEM;
+    if (specialization === 'seedance') system = SEEDANCE_SYSTEM;
+    const text = await callClaude(model, messages, system, 2048);
     res.json({ text, model, costs: sessionCosts });
   } catch (err) {
     res.status(500).json({ error: err.message });

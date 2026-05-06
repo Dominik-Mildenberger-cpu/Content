@@ -237,6 +237,12 @@ table a,.link{color:var(--terra);cursor:pointer;text-decoration:none}
     <button class="nav-item" data-view="prompts" onclick="navigate('prompts')">
       <span class="nav-icon">✨</span> Prompts
     </button>
+    <button class="nav-item" data-view="image-prompt" onclick="navigate('image-prompt')">
+      <span class="nav-icon">🖼️</span> Image Prompt Helper
+    </button>
+    <button class="nav-item" data-view="seedance" onclick="navigate('seedance')">
+      <span class="nav-icon">🎬</span> Seedance Promoter
+    </button>
   </nav>
   <div class="sidebar-bottom">
     <div class="cost-box">
@@ -353,6 +359,68 @@ table a,.link{color:var(--terra);cursor:pointer;text-decoration:none}
       <div class="chat-input-row">
         <input type="text" id="chat-input" placeholder="Frag mich etwas über Content, Hooks, Strategie..." onkeydown="if(event.key==='Enter')sendChat()">
         <button class="btn btn-primary" id="btn-chat-send" onclick="sendChat()">Senden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGE PROMPT HELPER -->
+  <div id="view-image-prompt" class="view">
+    <div class="view-header">
+      <div class="view-title">🖼️ Image Prompt Helper</div>
+      <div style="font-size:13px;color:var(--text3)">Midjourney · DALL-E 3 · Flux · Stable Diffusion · Firefly</div>
+    </div>
+    <div class="chat-quick">
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen Midjourney-Prompt für einen eleganten Produktshot unserer Weinbrand-Trüffel auf Marmor')">🍫 Trüffel Produktshot</button>
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen Flux-Prompt für eine Vinella Pralinenschachtel im Luxus-Lifestyle-Setting')">🎁 Geschenkbox Lifestyle</button>
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen DALL-E 3 Prompt für eine rustikale Pfälzer Weinberg-Atmosphäre mit Vinella Produkten')">🍇 Weinberg Atmosphäre</button>
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen Stable Diffusion Prompt für ein stimmungsvolles Flat-Lay unserer Grappa-Pralinen')">📸 Flat Lay Pralinen</button>
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen Midjourney-Prompt für ein weihnachtliches Vinella Geschenkarrangement, golden hour Licht')">🎄 Weihnachts-Shot</button>
+      <button class="chat-quick-btn" onclick="imgPromptQuick('Erstelle einen Prompt für einen Close-up ASMR-Style Shot unserer Weingummis mit Textur-Detail')">🔍 Textur Close-up</button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="img-prompt-messages" style="background:linear-gradient(180deg,#1a0f06 0%,#2C1A0E 100%)">
+        <div class="chat-msg chat-msg-assistant">
+          <div class="chat-bubble" style="background:rgba(200,131,42,0.15);border:1px solid rgba(200,131,42,0.3);color:#F0EBE3">
+            Hallo! Ich bin dein Image Prompt Spezialist für Vinella. 🖼️<br><br>
+            Ich generiere professionelle KI-Bild-Prompts für <strong>Midjourney, DALL-E 3, Flux, Stable Diffusion</strong> und andere Tools – immer im Vinella-Stil: luxuriös, warm, appetitlich.<br><br>
+            Sag mir einfach was du brauchst – Produktshot, Lifestyle, Stimmungsbild – und ich liefere den perfekten Prompt inkl. Negative Prompt und Einstellungen.
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-row" style="background:#2C1A0E;border-color:#3D2618">
+        <input type="text" id="img-prompt-input" placeholder="z.B. Produktshot Weinbrand-Trüffel für Instagram, Midjourney..." style="background:#3D2618;border-color:#5A3A20;color:#F0EBE3" onkeydown="if(event.key==='Enter')sendImgPrompt()">
+        <button class="btn btn-gold" id="btn-img-prompt-send" onclick="sendImgPrompt()">Generieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEEDANCE PROMOTER -->
+  <div id="view-seedance" class="view">
+    <div class="view-header">
+      <div class="view-title">🎬 Seedance Promoter</div>
+      <div style="font-size:13px;color:var(--text3)">Seedance · Kling · Luma Dream Machine · Runway · Sora</div>
+    </div>
+    <div class="chat-quick">
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Seedance-Prompt für ein elegantes Slow-Motion Video unserer Weinbrand-Trüffel – Schokolade glänzt, Produktreveal')">🍫 Trüffel Reveal</button>
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Kling-Prompt für ein Unboxing-Video unserer Feinkost-Geschenkbox mit eleganten Händen')">🎁 Geschenkbox Unboxing</button>
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Luma Dream Machine Prompt für einen cineastischen Weinberg-Flug über die Pfalz mit Vinella Produkten')">🍇 Weinberg Drohne</button>
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Seedance-Prompt für ein ASMR-Video: Praline wird aufgeschnitten, Füllung läuft heraus, Slow Motion')">🎵 ASMR Praline</button>
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Runway-Prompt für einen Werbeclip (15 Sek.) für Vinella Weingummis, bunt, fröhlich, Sommer-Feeling')">☀️ Weingummi Werbespot</button>
+      <button class="chat-quick-btn" onclick="seedanceQuick('Erstelle einen Kling-Prompt für ein Behind-the-Scenes Video der Pralinenfertigung in der Manufaktur')">🏭 Behind the Scenes</button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="seedance-messages" style="background:linear-gradient(180deg,#060a1a 0%,#0E1430 100%)">
+        <div class="chat-msg chat-msg-assistant">
+          <div class="chat-bubble" style="background:rgba(80,100,200,0.15);border:1px solid rgba(100,120,220,0.3);color:#E8EEFF">
+            Hey! Ich bin dein Seedance & KI-Video Spezialist für Vinella. 🎬<br><br>
+            Ich erstelle professionelle Video-Prompts für <strong>Seedance, Kling, Luma Dream Machine, Runway</strong> und Sora – optimiert für Vinella's luxuriösen Produktstil.<br><br>
+            Jeder Prompt enthält: Szenenbeschreibung, Kamerabewegung, Beleuchtung, Tempo und Stilangaben – direkt copy-paste bereit für das jeweilige Tool.
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-row" style="background:#0E1430;border-color:#1A2060">
+        <input type="text" id="seedance-input" placeholder="z.B. Slow-Motion Video Weinbrand-Trüffel für TikTok, Seedance..." style="background:#1A2060;border-color:#2A3480;color:#E8EEFF" onkeydown="if(event.key==='Enter')sendSeedance()">
+        <button class="btn" style="background:#4A6AE0;color:white" id="btn-seedance-send" onclick="sendSeedance()">Generieren</button>
       </div>
     </div>
   </div>
@@ -1144,6 +1212,80 @@ function toggleSaveMode() {
   document.getElementById('model-display').textContent=S.saveMode?'Haiku aktiv (günstig)':'Sonnet 4 aktiv';
   toast(S.saveMode?'Spar-Modus aktiv – Haiku wird genutzt':'Normal-Modus – Sonnet aktiv');
 }
+
+// ─── IMAGE PROMPT HELPER ─────────────────────────────────────
+const imgPromptHist = [];
+
+async function sendImgPrompt() {
+  const input = document.getElementById('img-prompt-input');
+  const msg = input.value.trim(); if (!msg) return;
+  input.value = '';
+  addImgPromptMsg('user', msg);
+  imgPromptHist.push({ role: 'user', content: msg });
+  const btn = document.getElementById('btn-img-prompt-send');
+  setLoading(btn, true);
+  try {
+    const r = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'strategy', prompt: msg, saveMode: S.saveMode, history: imgPromptHist.slice(-10), specialization: 'image-prompt' })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    addImgPromptMsg('assistant', d.text);
+    imgPromptHist.push({ role: 'assistant', content: d.text });
+  } catch (err) { toast(err.message, 'error'); }
+  setLoading(btn, false); updateCosts();
+}
+
+function addImgPromptMsg(role, text) {
+  const c = document.getElementById('img-prompt-messages');
+  const d = document.createElement('div'); d.className = `chat-msg chat-msg-${role}`;
+  const bubbleStyle = role === 'assistant'
+    ? 'style="background:rgba(200,131,42,0.15);border:1px solid rgba(200,131,42,0.3);color:#F0EBE3"'
+    : 'style="background:var(--gold);color:white"';
+  d.innerHTML = `<div class="chat-bubble" ${bubbleStyle}>${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px">$1</code>')}</div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function imgPromptQuick(prompt) { document.getElementById('img-prompt-input').value = prompt; sendImgPrompt(); }
+
+// ─── SEEDANCE PROMOTER ────────────────────────────────────────
+const seedanceHist = [];
+
+async function sendSeedance() {
+  const input = document.getElementById('seedance-input');
+  const msg = input.value.trim(); if (!msg) return;
+  input.value = '';
+  addSeedanceMsg('user', msg);
+  seedanceHist.push({ role: 'user', content: msg });
+  const btn = document.getElementById('btn-seedance-send');
+  setLoading(btn, true);
+  try {
+    const r = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'strategy', prompt: msg, saveMode: S.saveMode, history: seedanceHist.slice(-10), specialization: 'seedance' })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    addSeedanceMsg('assistant', d.text);
+    seedanceHist.push({ role: 'assistant', content: d.text });
+  } catch (err) { toast(err.message, 'error'); }
+  setLoading(btn, false); updateCosts();
+}
+
+function addSeedanceMsg(role, text) {
+  const c = document.getElementById('seedance-messages');
+  const d = document.createElement('div'); d.className = `chat-msg chat-msg-${role}`;
+  const bubbleStyle = role === 'assistant'
+    ? 'style="background:rgba(80,100,200,0.15);border:1px solid rgba(100,120,220,0.3);color:#E8EEFF"'
+    : 'style="background:#4A6AE0;color:white"';
+  d.innerHTML = `<div class="chat-bubble" ${bubbleStyle}>${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px">$1</code>')}</div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function seedanceQuick(prompt) { document.getElementById('seedance-input').value = prompt; sendSeedance(); }
 
 // ─── PROMPTS ──────────────────────────────────────────────────
 function renderPrompts(cat='Alle') {
