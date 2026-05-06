@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinella Content Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --terra:#8B3A2A; --terra-lt:#A84A38; --terra-dim:rgba(139,58,42,0.12);
+  --gold:#C8832A; --gold-lt:#E09A3C; --gold-dim:rgba(200,131,42,0.15);
+  --creme:#F7F2E8; --creme-dk:#EDE6D6; --creme-dkr:#E0D8C4;
+  --braun:#2C1A0E; --braun-lt:#3D2618;
+  --text:#1A1A1A; --text2:#5A4A3A; --text3:#9A8A7A; --white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;font-size:14px;background:var(--creme);color:var(--text);line-height:1.6;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--braun);display:flex;flex-direction:column;padding:0}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo-mark{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-family:'DM Sans',sans-serif}
+.logo-name{font-family:'Playfair Display',serif;font-size:28px;color:var(--white);line-height:1.1}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:2px}
+.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;transition:.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--braun-lt);color:rgba(255,255,255,0.9)}
+.nav-item.active{background:var(--terra);color:var(--white)}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-bottom{padding:14px;border-top:1px solid rgba(255,255,255,0.08)}
+.cost-box{background:rgba(255,255,255,0.06);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.cost-label{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px}
+.cost-amount{font-size:18px;color:var(--gold);font-family:'Playfair Display',serif;margin:2px 0}
+.cost-reqs{font-size:11px;color:rgba(255,255,255,0.35)}
+.model-badge{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;text-align:center}
+.btn-savemode{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;transition:.15s}
+.btn-savemode:hover,.btn-savemode.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.view{display:none;flex:1;padding:28px 32px;animation:fadeIn .2s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.view-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--terra)}
+.view-actions{display:flex;gap:10px;align-items:center}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:.15s;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--terra);color:var(--white)}
+.btn-primary:hover:not(:disabled){background:var(--terra-lt)}
+.btn-gold{background:var(--gold);color:var(--white)}
+.btn-gold:hover:not(:disabled){background:var(--gold-lt)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--creme-dkr)}
+.btn-ghost:hover:not(:disabled){background:var(--creme-dk)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-danger{background:#c0392b;color:white}
+.btn-danger:hover:not(:disabled){background:#a93226}
+
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;gap:12px}
+.cal-nav-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);min-width:180px;text-align:center}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-weekday{text-align:center;font-size:11px;font-weight:600;color:var(--text3);padding:6px 0;text-transform:uppercase;letter-spacing:.5px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-cell{background:var(--white);border:1px solid var(--creme-dkr);border-radius:10px;padding:8px;min-height:90px;cursor:pointer;transition:.15s;position:relative}
+.cal-cell:hover{border-color:var(--gold);background:#FFFDF8}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-cell.empty:hover{background:transparent;border-color:transparent}
+.cal-cell.today{border-color:var(--terra);border-width:2px}
+.cal-cell.weekend{background:var(--creme-dk)}
+.cal-date{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.cal-cell.today .cal-date{color:var(--terra);font-weight:700}
+.cal-posts{display:flex;flex-direction:column;gap:2px}
+.post-chip{font-size:10px;padding:2px 6px;border-radius:4px;color:white;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.post-chip:hover{opacity:.85}
+.post-chip-more{font-size:10px;color:var(--text3);padding:1px 4px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--creme-dkr);border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(44,26,14,.05)}
+.card-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--terra);margin-bottom:14px}
+
+/* FORMS */
+.form-row{display:grid;gap:12px;margin-bottom:12px}
+.form-row.cols-2{grid-template-columns:1fr 1fr}
+.form-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+label{font-size:12px;font-weight:600;color:var(--text2)}
+input,select,textarea{padding:9px 12px;border:1px solid var(--creme-dkr);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);transition:.15s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 3px var(--terra-dim)}
+textarea{resize:vertical;min-height:80px}
+.char-count{font-size:11px;text-align:right;color:var(--text3);margin-top:2px}
+.char-count.ok{color:#2D8A4E}
+.char-count.warn{color:#B8780A}
+.char-count.danger{color:#C0392B}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,26,14,.55);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:18px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(44,26,14,.3);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--creme-dkr);position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--terra)}
+.modal-close{background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;padding:2px 6px;border-radius:6px}
+.modal-close:hover{background:var(--creme-dk)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--creme-dkr);display:flex;gap:10px;justify-content:flex-end}
+
+/* POST MODAL TWO-COLUMN */
+.post-modal-grid{display:grid;grid-template-columns:1fr 320px;gap:24px}
+.ai-panel{background:var(--braun);border-radius:12px;padding:18px;color:white;display:flex;flex-direction:column;gap:10px}
+.ai-panel-title{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:4px}
+.ai-btn{width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);font-size:12px;cursor:pointer;text-align:left;transition:.15s;font-family:'DM Sans',sans-serif}
+.ai-btn:hover:not(:disabled){background:rgba(255,255,255,.12);border-color:var(--gold)}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed}
+.ai-result-box{background:rgba(255,255,255,.07);border-radius:8px;padding:12px;font-size:12px;line-height:1.65;color:rgba(255,255,255,.8);margin-top:6px;max-height:200px;overflow-y:auto}
+
+/* IMAGE UPLOAD */
+.upload-zone{border:2px dashed var(--creme-dkr);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.15s;background:var(--creme)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--terra);background:var(--terra-dim)}
+.upload-zone p{font-size:12px;color:var(--text3)}
+.upload-zone input{display:none}
+
+/* STATUS BADGE */
+.status-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.status-geplant{background:#E8F4FD;color:#1A5276}
+.status-fertig{background:#E8F8F0;color:#1D6A3A}
+.status-veroeffentlicht{background:var(--terra-dim);color:var(--terra)}
+.status-in-bearbeitung{background:var(--gold-dim);color:#7A4A10}
+
+/* PLATFORM BADGE */
+.platform-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:white}
+
+/* WEEKLY PLAN MODAL */
+.wp-modal{width:760px}
+.wp-sliders{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-label{width:90px;font-size:12px;color:var(--text2);font-weight:600}
+.slider-row input[type=range]{flex:1;accent-color:var(--terra)}
+.slider-val{width:20px;text-align:center;font-size:13px;font-weight:600;color:var(--terra)}
+.wp-table{width:100%;border-collapse:collapse;font-size:12px}
+.wp-table th{background:var(--terra);color:white;padding:8px 10px;text-align:left}
+.wp-table td{padding:7px 10px;border-bottom:1px solid var(--creme-dkr)}
+.wp-table tr:nth-child(even) td{background:var(--creme)}
+
+/* IDEAS */
+.ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.idea-card{background:var(--white);border:1px solid var(--creme-dkr);border-radius:12px;padding:16px}
+.idea-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.idea-header strong{font-size:14px;color:var(--text)}
+.idea-text{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.idea-actions{display:flex;gap:8px}
+
+/* ANALYTICS */
+.analytics-form{display:grid;grid-template-columns:repeat(6,1fr) auto;gap:10px;align-items:end;margin-bottom:20px}
+.analytics-form .form-group{gap:3px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:var(--white);border:1px solid var(--creme-dkr);border-radius:12px;padding:16px}
+.chart-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px}
+.analytics-table{width:100%;border-collapse:collapse;font-size:13px}
+.analytics-table th{background:var(--terra);color:white;padding:9px 12px;text-align:left;font-size:12px}
+.analytics-table td{padding:9px 12px;border-bottom:1px solid var(--creme-dkr)}
+.analytics-table tr:nth-child(even) td{background:var(--creme)}
+
+/* CHAT */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 160px)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--white);border:1px solid var(--creme-dkr);border-radius:12px 12px 0 0}
+.chat-msg{display:flex}
+.chat-msg-user{justify-content:flex-end}
+.chat-bubble{max-width:70%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.chat-msg-user .chat-bubble{background:var(--terra);color:white;border-radius:12px 12px 2px 12px}
+.chat-msg-assistant .chat-bubble{background:var(--creme-dk);color:var(--text);border-radius:12px 12px 12px 2px}
+.chat-input-row{display:flex;gap:10px;padding:12px;background:var(--white);border:1px solid var(--creme-dkr);border-top:none;border-radius:0 0 12px 12px}
+.chat-input-row input{flex:1}
+.chat-quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chat-quick-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--creme-dkr);background:var(--white);font-size:12px;cursor:pointer;color:var(--text2);transition:.15s}
+.chat-quick-btn:hover{border-color:var(--terra);color:var(--terra)}
+
+/* PROMPTS */
+.prompts-cats{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.cat-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--creme-dkr);background:var(--white);font-size:12px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif;transition:.15s}
+.cat-btn:hover,.cat-btn.active{background:var(--terra);color:white;border-color:var(--terra)}
+.prompts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.prompt-card{background:var(--white);border:1px solid var(--creme-dkr);border-radius:12px;padding:16px}
+.prompt-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.prompt-card-desc{font-size:12px;color:var(--text3);margin-bottom:10px}
+.prompt-text{background:var(--creme);border-radius:8px;padding:10px;font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:10px;max-height:80px;overflow-y:auto}
+.prompt-cat-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--terra-dim);color:var(--terra);margin-bottom:8px}
+
+/* TOAST */
+#toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateX(120%);transition:transform .3s ease;max-width:320px}
+.toast.show{transform:none}
+.toast-success{background:var(--terra);color:white}
+.toast-error{background:#C0392B;color:white}
+.toast-warn{background:var(--gold);color:white}
+
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--creme-dk) 25%,var(--creme-dkr) 50%,var(--creme-dk) 75%);background-size:200% 100%;animation:skeleton 1.5s infinite;border-radius:8px;padding:16px;color:transparent}
+
+/* EMPTY STATE */
+.empty-state{color:var(--text3);text-align:center;padding:40px;font-size:14px}
+
+/* MISC */
+.divider{height:1px;background:var(--creme-dkr);margin:16px 0}
+table a,.link{color:var(--terra);cursor:pointer;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Manufaktur</div>
+    <div class="logo-name">Vinella</div>
+    <div class="logo-sub">Content Studio</div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-view="kalender" onclick="navigate('kalender')">
+      <span class="nav-icon">📅</span> Kalender
+    </button>
+    <button class="nav-item" data-view="ideen" onclick="navigate('ideen')">
+      <span class="nav-icon">💡</span> Ideenboard
+    </button>
+    <button class="nav-item" data-view="analytics" onclick="navigate('analytics')">
+      <span class="nav-icon">📈</span> Analytics
+    </button>
+    <button class="nav-item" data-view="chat" onclick="navigate('chat')">
+      <span class="nav-icon">🤖</span> KI-Chat
+    </button>
+    <button class="nav-item" data-view="prompts" onclick="navigate('prompts')">
+      <span class="nav-icon">✨</span> Prompts
+    </button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="cost-box">
+      <div class="cost-label">Session-Kosten</div>
+      <div class="cost-amount" id="cost-display">$0.0000</div>
+      <div class="cost-reqs" id="req-display">0 Anfragen</div>
+    </div>
+    <div class="model-badge" id="model-display">Sonnet 4 aktiv</div>
+    <button class="btn-savemode" id="btn-save-mode" onclick="toggleSaveMode()">💡 Spar-Modus: AUS</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- KALENDER -->
+  <div id="view-kalender" class="view active">
+    <div class="view-header">
+      <div class="view-title">📅 Kalender</div>
+      <div class="view-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 PDF exportieren</button>
+        <button class="btn btn-gold" onclick="openWeekPlanModal()">🤖 Woche planen</button>
+        <button class="btn btn-primary" onclick="openPostModal()">+ Neuer Post</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">←</button>
+          <span class="cal-nav-title" id="cal-title"></span>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">→</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="calToday()">Heute</button>
+      </div>
+      <div class="cal-weekdays">
+        <div class="cal-weekday">Mo</div><div class="cal-weekday">Di</div><div class="cal-weekday">Mi</div>
+        <div class="cal-weekday">Do</div><div class="cal-weekday">Fr</div>
+        <div class="cal-weekday" style="color:var(--terra)">Sa</div>
+        <div class="cal-weekday" style="color:var(--terra)">So</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
+  <!-- IDEEN -->
+  <div id="view-ideen" class="view">
+    <div class="view-header">
+      <div class="view-title">💡 Ideenboard</div>
+      <div class="view-actions">
+        <button class="btn btn-gold" id="btn-generate-ideas" onclick="generateIdeas()">🤖 5 KI-Ideen</button>
+        <button class="btn btn-primary" onclick="openNewIdeaModal()">+ Neue Idee</button>
+      </div>
+    </div>
+    <div class="ideas-grid" id="ideas-grid">
+      <p class="empty-state">Noch keine Ideen. Klick auf "Neue Idee" oder lass die KI generieren.</p>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="view-analytics" class="view">
+    <div class="view-header">
+      <div class="view-title">📈 Analytics</div>
+      <div class="view-actions">
+        <button class="btn btn-gold" id="btn-ai-insight" onclick="aiAnalyticsInsight()">🤖 KI-Empfehlung</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Daten eintragen</div>
+      <div class="analytics-form">
+        <div class="form-group"><label>Datum</label><input type="date" id="an-date"></div>
+        <div class="form-group"><label>Plattform</label>
+          <select id="an-platform"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>Pinterest</option></select>
+        </div>
+        <div class="form-group"><label>Reichweite</label><input type="number" id="an-reach" placeholder="0"></div>
+        <div class="form-group"><label>Impressions</label><input type="number" id="an-impressions" placeholder="0"></div>
+        <div class="form-group"><label>Engagement %</label><input type="number" id="an-engagement" step="0.1" placeholder="0.0"></div>
+        <div class="form-group"><label>Follower</label><input type="number" id="an-followers" placeholder="0"></div>
+        <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary" onclick="addAnalyticsEntry()" style="height:39px">Speichern</button></div>
+      </div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">Reichweite nach Plattform</div><canvas id="chart-reach" height="180"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Follower-Wachstum</div><canvas id="chart-followers" height="180"></canvas></div>
+      <div class="chart-card"><div class="chart-title">Ø Engagement-Rate %</div><canvas id="chart-engagement" height="180"></canvas></div>
+    </div>
+    <div id="ai-insight-result" style="margin-bottom:16px"></div>
+    <div class="card">
+      <div class="card-title">Alle Einträge</div>
+      <table class="analytics-table" style="width:100%">
+        <thead><tr><th>Datum</th><th>Plattform</th><th>Reichweite</th><th>Impressions</th><th>Engagement</th><th>Follower</th><th></th></tr></thead>
+        <tbody id="analytics-tbody"><tr><td colspan="7" class="empty-state">Noch keine Daten</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="view-chat" class="view">
+    <div class="view-header">
+      <div class="view-title">🤖 KI-Chat</div>
+    </div>
+    <div class="chat-quick" id="chat-quick">
+      <button class="chat-quick-btn" onclick="chatQuick('Schreib mir 5 Hook-Varianten für einen Instagram-Post über Weinbrand-Trüffel')">🎯 Hook-Ideen</button>
+      <button class="chat-quick-btn" onclick="chatQuick('Was sind die besten Posting-Zeiten für Instagram und TikTok für eine Feinkost-Marke?')">⏰ Posting-Zeiten</button>
+      <button class="chat-quick-btn" onclick="chatQuick('Schreib ein TikTok-Script (60 Sek.) für die Vinella Grappa-Pralinen')">🎬 TikTok-Script</button>
+      <button class="chat-quick-btn" onclick="chatQuick('Analysiere unsere Content-Strategie und gib 5 konkrete Verbesserungsvorschläge')">📊 Strategie</button>
+      <button class="chat-quick-btn" onclick="chatQuick('Erstelle einen Higgsfield-Prompt für ein elegantes Produktvideo unserer Likörpralinen')">🎥 Higgsfield-Prompt</button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg chat-msg-assistant">
+          <div class="chat-bubble">Hallo! Ich bin dein Vinella Content-Assistent. Ich helfe dir mit Hooks, Captions, Scripts, Strategien und allem rund um euren Content. Was kann ich für dich tun?</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Frag mich etwas über Content, Hooks, Strategie..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary" id="btn-chat-send" onclick="sendChat()">Senden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPTS -->
+  <div id="view-prompts" class="view">
+    <div class="view-header">
+      <div class="view-title">✨ Prompt-Bibliothek</div>
+    </div>
+    <div class="prompts-cats" id="prompt-cats"></div>
+    <div class="prompts-grid" id="prompts-grid"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- POST MODAL -->
+<div class="modal-overlay" id="modal-post">
+  <div class="modal" style="width:900px">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-post-title">Neuer Post</div>
+      <button class="modal-close" onclick="closePostModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="post-id">
+      <div class="post-modal-grid">
+        <div>
+          <div class="form-row cols-2">
+            <div class="form-group"><label>Datum</label><input type="date" id="post-date"></div>
+            <div class="form-group"><label>Plattform</label>
+              <select id="post-platform" onchange="updateAllCharCounts()">
+                <option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Facebook</option><option>Pinterest</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div class="form-group"><label>Produkt</label>
+              <select id="post-product">
+                <option value="">– auswählen –</option>
+                <option>Weinbrand-Trüffel</option><option>Grappa-Pralinen</option><option>Weingummis</option>
+                <option>Likörpralinen</option><option>Feinkost-Geschenkbox</option>
+                <option>Schokoladen-Kollektion</option><option>Saisonale Spezialität</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Status</label>
+              <select id="post-status">
+                <option value="geplant">Geplant</option><option value="in Bearbeitung">In Bearbeitung</option>
+                <option value="fertig">Fertig</option><option value="veröffentlicht">Veröffentlicht</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Thema</label><input type="text" id="post-theme" placeholder="z.B. Ostern, Valentinstag, Launch..."></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Hook <span style="color:var(--text3);font-weight:400">(max 60 Zeichen)</span></label>
+              <input type="text" id="post-hook" oninput="updateCharCount('post-hook')" maxlength="60" placeholder="Aufmerksamkeitsstarker Einstieg...">
+              <div class="char-count" id="post-hook-count">0/60</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Caption</label>
+              <textarea id="post-caption" rows="5" oninput="updateCharCount('post-caption')" placeholder="Vollständige Caption..."></textarea>
+              <div class="char-count" id="post-caption-count">0/2200</div>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div class="form-group"><label>Call-to-Action</label><input type="text" id="post-cta" placeholder="z.B. Jetzt bestellen auf vinella.de"></div>
+            <div class="form-group"><label>Hashtags</label><input type="text" id="post-hashtags" placeholder="#vinella #feinkost ..."></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Notizen</label><textarea id="post-notes" rows="2" placeholder="Interne Notizen..."></textarea></div>
+          </div>
+          <!-- Image upload -->
+          <div class="form-group">
+            <label>Bild / Video</label>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+              <p>📁 Klicken oder Datei hierher ziehen</p>
+              <p>JPG, PNG, MP4, MOV · max. 50 MB</p>
+              <input type="file" id="file-input" accept="image/*,video/*" onchange="handleFileInput(event)">
+            </div>
+            <div id="post-img-preview"></div>
+          </div>
+        </div>
+        <!-- AI PANEL -->
+        <div class="ai-panel">
+          <div class="ai-panel-title">🤖 KI-Assistent</div>
+          <button class="ai-btn" id="btn-ai-caption" onclick="aiGenerateCaption()">✍️ Caption generieren</button>
+          <button class="ai-btn" id="btn-ai-hooks" onclick="aiGenerateHooks()">🎯 5 Hook-Varianten</button>
+          <button class="ai-btn" id="btn-ai-hashtags" onclick="aiGenerateHashtags()">🏷️ Hashtags generieren</button>
+          <button class="ai-btn" id="btn-ai-cta" onclick="aiGenerateCTA()">📣 CTA generieren</button>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:4px 0"></div>
+          <button class="ai-btn" id="btn-ai-vision" onclick="aiAnalyzeImage()" style="border-color:var(--gold);color:var(--gold)">🖼️ Bild analysieren (Vision)</button>
+          <div style="font-size:10px;color:rgba(255,255,255,.35);text-align:center">Zuerst Bild hochladen</div>
+          <div id="ai-result"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-delete-post" onclick="deletePost()" style="display:none;margin-right:auto">🗑 Löschen</button>
+      <button class="btn btn-ghost" onclick="closePostModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="savePost()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- WOCHENPLAN MODAL -->
+<div class="modal-overlay" id="modal-weekplan">
+  <div class="modal wp-modal">
+    <div class="modal-header">
+      <div class="modal-title">🤖 KI Wochenplan-Generator</div>
+      <button class="modal-close" onclick="document.getElementById('modal-weekplan').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row cols-2" style="margin-bottom:16px">
+        <div class="form-group"><label>Kalenderwoche</label><input type="number" id="wp-kw" min="1" max="53" value="1"></div>
+        <div class="form-group"><label>Jahr</label><input type="number" id="wp-year" min="2024" max="2030" value="2025"></div>
+      </div>
+      <div class="form-row cols-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Fokus-Produkt</label>
+          <select id="wp-product">
+            <option>Weinbrand-Trüffel</option><option>Grappa-Pralinen</option><option>Weingummis</option>
+            <option>Likörpralinen</option><option>Feinkost-Geschenkbox</option><option>Schokoladen-Kollektion</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Kampagnen-Thema (optional)</label><input type="text" id="wp-theme" placeholder="z.B. Sommergenuss, Valentinstag..."></div>
+      </div>
+      <div class="card-title" style="margin-bottom:12px">Posts pro Plattform</div>
+      <div class="wp-sliders">
+        <div class="slider-row"><span class="slider-label">📸 Instagram</span><input type="range" id="wp-instagram" min="0" max="5" value="3" oninput="document.getElementById('wp-instagram-val').textContent=this.value"><span class="slider-val" id="wp-instagram-val">3</span></div>
+        <div class="slider-row"><span class="slider-label">🎵 TikTok</span><input type="range" id="wp-tiktok" min="0" max="5" value="3" oninput="document.getElementById('wp-tiktok-val').textContent=this.value"><span class="slider-val" id="wp-tiktok-val">3</span></div>
+        <div class="slider-row"><span class="slider-label">▶️ YouTube</span><input type="range" id="wp-youtube" min="0" max="3" value="1" oninput="document.getElementById('wp-youtube-val').textContent=this.value"><span class="slider-val" id="wp-youtube-val">1</span></div>
+        <div class="slider-row"><span class="slider-label">👥 Facebook</span><input type="range" id="wp-facebook" min="0" max="3" value="2" oninput="document.getElementById('wp-facebook-val').textContent=this.value"><span class="slider-val" id="wp-facebook-val">2</span></div>
+        <div class="slider-row"><span class="slider-label">📌 Pinterest</span><input type="range" id="wp-pinterest" min="0" max="5" value="2" oninput="document.getElementById('wp-pinterest-val').textContent=this.value"><span class="slider-val" id="wp-pinterest-val">2</span></div>
+      </div>
+      <div style="margin-top:20px" id="wp-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-weekplan').classList.remove('open')">Abbrechen</button>
+      <button class="btn btn-gold" id="btn-wp-generate" onclick="generateWeekPlan()">🤖 Plan generieren</button>
+      <button class="btn btn-primary" id="btn-wp-save" onclick="saveWeekPlan()" style="display:none">💾 In Kalender speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────
+const PLATFORM_COLORS = {
+  'Instagram':'#8B3A2A','TikTok':'#010101','YouTube':'#CC0000','Facebook':'#1877F2','Pinterest':'#E60023'
+};
+const PLATFORMS = ['Instagram','TikTok','YouTube','Facebook','Pinterest'];
+
+const PROMPT_DATA = [
+  {cat:'Higgsfield',title:'Trüffel Eleganz-Video',desc:'Für Weinbrand-Trüffel Produktvideo',text:'Cinematic close-up of a dark chocolate truffle being placed on a marble surface, golden hour light streaming through a wine cellar window, bokeh background with wine bottles, slow motion, luxury food advertisement style, 4K, shallow depth of field, warm amber tones'},
+  {cat:'Higgsfield',title:'Pralinenschachtel Unboxing',desc:'Glamouröses Unboxing-Video',text:'Elegant hands opening a dark burgundy gift box revealing artisan chocolates, rose petals falling in slow motion, candlelight ambiance, luxury lifestyle aesthetic, product reveal shot, cinematic color grade, rich warm tones'},
+  {cat:'Higgsfield',title:'Herstellung Zeitraffer',desc:'Behind the Scenes Manufaktur',text:'Time-lapse of artisan chocolate making process, hands carefully crafting chocolates, overhead shot, warm kitchen lighting, steam rising, close-up details of texture and shine, documentary style, golden color palette'},
+  {cat:'Instagram',title:'Produkt-Launch Caption',desc:'Für neue Produkte',text:'[Produktname] ist da. ✨\n\nWir haben monatelang getüftelt, verfeinert und verkostet – jetzt ist es endlich soweit. [Kurze emotionale Beschreibung, 2-3 Sätze].\n\nWas macht es besonders? [USP in 1-2 Sätzen].\n\nAb sofort erhältlich auf vinella.de 🍇\n\n👇 Tagge jemanden, dem du diesen Genuss gönnen würdest!'},
+  {cat:'Instagram',title:'Behind the Scenes',desc:'Einblick in die Manufaktur',text:'Was steckt hinter einer Vinella-Praline? 🍫\n\n[Beschreibung des Prozesses, 3-4 Sätze über Handarbeit und Qualität].\n\nJede Praline ist ein kleines Kunstwerk – und ein Liebesbrief an den guten Geschmack.\n\nWelches Vinella-Produkt ist dein Favorit? Sag es uns in den Kommentaren! 👇'},
+  {cat:'Instagram',title:'Kundenzitat Caption',desc:'Social Proof Post',text:'„[Kundenzitat]" ❤️\n\nNichts macht uns glücklicher als solche Nachrichten. Genau dafür machen wir das, was wir tun.\n\nDanke an alle, die unsere Leidenschaft für Feinkost teilen und tragen. Ihr seid der Grund, warum Vinella existiert. 🍇\n\nDein Vinella-Erlebnis teilen? Tag uns mit #VinellaGenuss!'},
+  {cat:'TikTok',title:'POV Hook Script',desc:'60-Sekunden POV Video',text:'POV: Du öffnest zum ersten Mal eine Vinella Geschenkbox\n\n[0-5 Sek]: Hook + erste Reaktion\n[5-20 Sek]: Nahaufnahme der Produkte, erste Kostprobe\n[20-40 Sek]: Reaktion, Beschreibung des Geschmacks\n[40-55 Sek]: "Wo bekomme ich das?" → vinella.de\n[55-60 Sek]: CTA + Call für Kommentare'},
+  {cat:'TikTok',title:'Did You Know Hook',desc:'Wissens-Format',text:'Wusstest du, dass unsere Weinbrand-Trüffel [interessante Tatsache]? 🤯\n\n[Kurze Erklärung, 2-3 Sätze].\n\nUnd das Beste daran: [Benefit für den Zuschauer].\n\nLink in Bio für mehr Informationen und zum Bestellen! 🍫'},
+  {cat:'YouTube',title:'Video-Beschreibung',desc:'Standard YouTube Description',text:'In diesem Video zeigen wir euch [Thema].\n\n🍇 Über Vinella:\nVinella ist eine Premium-Feinkost-Manufaktur aus der Pfalz. Wir kreieren handgemachte Pralinen, Weinbrand-Trüffel und Feinkost-Spezialitäten mit Leidenschaft und Sorgfalt.\n\n🛒 Jetzt bestellen: vinella.de\n📸 Instagram: @vinella_feinkost\n\n📌 Kapitel:\n00:00 – Intro\n[weitere Kapitel]\n\n#Vinella #Feinkost #Pralinen #Pfalz'},
+  {cat:'Strategie',title:'Content-Audit Prompt',desc:'Für strategische Analyse',text:'Analysiere meinen bisherigen Content-Mix und beantworte: 1) Welche Inhalte performen am besten und warum? 2) Welche Plattform sollte ich mehr priorisieren? 3) Welche Content-Formate fehlen noch? 4) Wie kann ich die Posting-Frequenz optimieren? Meine Daten: [Analytics einfügen]'},
+  {cat:'Strategie',title:'Zielgruppen-Analyse',desc:'Zielgruppe definieren',text:'Erstelle eine detaillierte Zielgruppen-Analyse für Vinella Feinkost-Manufaktur aus der Pfalz. Berücksichtige: demografische Merkmale, Kaufmotive, Online-Verhalten, bevorzugte Plattformen und Content-Formate. Was sind die 3 wichtigsten Zielgruppen-Segmente?'},
+  {cat:'Strategie',title:'Kampagnen-Planung',desc:'Für saisonale Kampagnen',text:'Plane eine 4-wöchige Social-Media-Kampagne für [Anlass/Produkt] bei Vinella. Erstelle: Kampagnen-Motto, Content-Plan pro Woche, Platform-Mix, KPIs und Budget-Empfehlung. Ziel: Reichweite erhöhen und Conversions steigern.'},
+  {cat:'Pinterest',title:'Pin-Beschreibung',desc:'SEO-optimierte Pin Caption',text:'[Produktname] – [Haupt-Keyword] ✨\n\n[Kurze emotionale Beschreibung, 2-3 Sätze mit relevanten Keywords].\n\nPerfekt für: [Anlässe/Zielgruppen]\n\n🛒 Jetzt entdecken auf vinella.de\n\n#[Keyword1] #[Keyword2] #Feinkost #Geschenkidee #Pralinen #PfalzGenuss'}
+];
+
+// ─── STATE ────────────────────────────────────────────────────
+const S = {
+  view: 'kalender',
+  posts: [], analytics: [], ideas: [],
+  calendar: { year: new Date().getFullYear(), month: new Date().getMonth() },
+  saveMode: false,
+  editingPost: null,
+  uploadedFileUrl: null,
+  uploadedFileBase64: null,
+  uploadedFileType: 'image/jpeg',
+  weekPlanPosts: [],
+  activePromptCat: 'Alle'
+};
+
+// ─── API ──────────────────────────────────────────────────────
+async function api(url, method='GET', body=null) {
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Serverfehler');
+  return d;
+}
+
+async function claudeAI(task, prompt, history=[]) {
+  return api('/api/claude','POST',{task,prompt,saveMode:S.saveMode,history});
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 350); }, 3500);
+}
+
+function setLoading(btn, on) {
+  if (on) { btn._txt = btn.textContent; btn.disabled=true; btn.textContent='Lädt...'; }
+  else { btn.disabled=false; btn.textContent=btn._txt||''; }
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────
+function navigate(view) {
+  S.view = view;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view===view));
+  document.querySelectorAll('.view').forEach(el => el.classList.toggle('active', el.id===`view-${view}`));
+  if (view==='kalender') renderCalendar();
+  if (view==='ideen') renderIdeas();
+  if (view==='analytics') renderAnalytics();
+  if (view==='prompts') renderPrompts();
+}
+
+// ─── COSTS ────────────────────────────────────────────────────
+async function updateCosts() {
+  try {
+    const c = await api('/api/costs');
+    document.getElementById('cost-display').textContent = `$${c.totalUSD.toFixed(4)}`;
+    document.getElementById('req-display').textContent = `${c.requests} Anfragen`;
+  } catch {}
+}
+setInterval(updateCosts, 15000);
+
+// ─── CALENDAR ─────────────────────────────────────────────────
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function renderCalendar() {
+  const { year, month } = S.calendar;
+  document.getElementById('cal-title').textContent = `${MONTHS[month]} ${year}`;
+  const firstDow = (new Date(year,month,1).getDay()+6)%7;
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  const monthPosts = S.posts.filter(p => {
+    if (!p.date) return false;
+    const d = new Date(p.date);
+    return d.getFullYear()===year && d.getMonth()===month;
+  });
+
+  for (let i=0; i<firstDow; i++) {
+    const e = document.createElement('div');
+    e.className = 'cal-cell empty';
+    grid.appendChild(e);
+  }
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    const isWeekend = dow===0||dow===6;
+    const dayPosts = monthPosts.filter(p=>p.date===ds);
+    const cell = document.createElement('div');
+    cell.className = `cal-cell${ds===today?' today':''}${isWeekend?' weekend':''}`;
+    cell.innerHTML = `<div class="cal-date">${d}</div><div class="cal-posts">
+      ${dayPosts.slice(0,3).map(p=>`<div class="post-chip" style="background:${PLATFORM_COLORS[p.platform]||'#8B3A2A'}" data-id="${p.id}" title="${p.platform}: ${p.theme||p.hook||''}">${(p.platform||'?').charAt(0)} ${(p.theme||p.hook||'').slice(0,10)}</div>`).join('')}
+      ${dayPosts.length>3?`<div class="post-chip-more">+${dayPosts.length-3} mehr</div>`:''}
+    </div>`;
+    cell.addEventListener('click', e => {
+      const chip = e.target.closest('.post-chip[data-id]');
+      if (chip) { const p=S.posts.find(x=>x.id===chip.dataset.id); if(p) openPostModal(p); }
+      else openPostModal(null, ds);
+    });
+    grid.appendChild(cell);
+  }
+}
+
+function calPrev() { if(S.calendar.month===0){S.calendar.month=11;S.calendar.year--;}else S.calendar.month--; renderCalendar(); }
+function calNext() { if(S.calendar.month===11){S.calendar.month=0;S.calendar.year++;}else S.calendar.month++; renderCalendar(); }
+function calToday() { S.calendar.year=new Date().getFullYear(); S.calendar.month=new Date().getMonth(); renderCalendar(); }
+
+// ─── POST MODAL ───────────────────────────────────────────────
+function openPostModal(post=null, defaultDate=null) {
+  S.editingPost = post;
+  S.uploadedFileUrl = post?.imageUrl||null;
+  S.uploadedFileBase64 = null;
+  document.getElementById('modal-post-title').textContent = post ? 'Post bearbeiten' : 'Neuer Post';
+  document.getElementById('post-id').value = post?.id||'';
+  document.getElementById('post-date').value = post?.date||defaultDate||new Date().toISOString().split('T')[0];
+  document.getElementById('post-platform').value = post?.platform||'Instagram';
+  document.getElementById('post-product').value = post?.product||'';
+  document.getElementById('post-theme').value = post?.theme||'';
+  document.getElementById('post-hook').value = post?.hook||'';
+  document.getElementById('post-caption').value = post?.caption||'';
+  document.getElementById('post-cta').value = post?.cta||'';
+  document.getElementById('post-hashtags').value = Array.isArray(post?.hashtags) ? post.hashtags.join(' ') : (post?.hashtags||'');
+  document.getElementById('post-status').value = post?.status||'geplant';
+  document.getElementById('post-notes').value = post?.notes||'';
+  document.getElementById('btn-delete-post').style.display = post ? 'block' : 'none';
+  document.getElementById('ai-result').innerHTML = '';
+  document.getElementById('post-img-preview').innerHTML = post?.imageUrl ? `<img src="${post.imageUrl}" style="max-width:100%;border-radius:8px;margin-top:8px">` : '';
+  updateAllCharCounts();
+  document.getElementById('modal-post').classList.add('open');
+}
+
+function closePostModal() {
+  document.getElementById('modal-post').classList.remove('open');
+}
+
+async function savePost() {
+  const id = document.getElementById('post-id').value;
+  const htRaw = document.getElementById('post-hashtags').value.trim();
+  const hashtags = htRaw ? htRaw.split(/\s+/).map(h=>h.startsWith('#')?h:'#'+h) : [];
+  const data = {
+    date: document.getElementById('post-date').value,
+    platform: document.getElementById('post-platform').value,
+    product: document.getElementById('post-product').value,
+    theme: document.getElementById('post-theme').value,
+    hook: document.getElementById('post-hook').value,
+    caption: document.getElementById('post-caption').value,
+    cta: document.getElementById('post-cta').value,
+    hashtags,
+    status: document.getElementById('post-status').value,
+    notes: document.getElementById('post-notes').value,
+    imageUrl: S.uploadedFileUrl || S.editingPost?.imageUrl || ''
+  };
+  try {
+    if (id) {
+      const updated = await api(`/api/posts/${id}`,'PUT',data);
+      S.posts = S.posts.map(p=>p.id===id?updated:p);
+      toast('Post aktualisiert');
+    } else {
+      const created = await api('/api/posts','POST',data);
+      S.posts.push(created);
+      toast('Post gespeichert');
+    }
+    closePostModal();
+    renderCalendar();
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function deletePost() {
+  const id = document.getElementById('post-id').value;
+  if (!id || !confirm('Post wirklich löschen?')) return;
+  try {
+    await api(`/api/posts/${id}`,'DELETE');
+    S.posts = S.posts.filter(p=>p.id!==id);
+    closePostModal(); renderCalendar(); toast('Post gelöscht');
+  } catch(err) { toast(err.message,'error'); }
+}
+
+// ─── IMAGE UPLOAD ─────────────────────────────────────────────
+function handleFileInput(e) { if(e.target.files[0]) handleImageUpload(e.target.files[0]); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  if(e.dataTransfer.files[0]) handleImageUpload(e.dataTransfer.files[0]);
+}
+
+async function handleImageUpload(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const r = await fetch('/api/upload',{method:'POST',body:formData});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+    S.uploadedFileUrl = d.url;
+    document.getElementById('post-img-preview').innerHTML = `<img src="${d.url}" style="max-width:100%;border-radius:8px;margin-top:8px">`;
+    const reader = new FileReader();
+    reader.onload = ev => { S.uploadedFileBase64 = ev.target.result.split(',')[1]; S.uploadedFileType = file.type; };
+    reader.readAsDataURL(file);
+    toast('Bild hochgeladen ✓');
+  } catch(err) { toast('Upload fehler: '+err.message,'error'); }
+}
+
+// ─── AI FEATURES ──────────────────────────────────────────────
+async function aiGenerateCaption() {
+  const btn = document.getElementById('btn-ai-caption');
+  const platform = document.getElementById('post-platform').value;
+  const product = document.getElementById('post-product').value;
+  const theme = document.getElementById('post-theme').value;
+  const hook = document.getElementById('post-hook').value;
+  setLoading(btn,true);
+  try {
+    const {text} = await claudeAI('caption',
+      `Schreibe eine professionelle ${platform} Caption für Vinella Feinkost.
+Produkt: ${product||'Weinbrand-Trüffel'} | Thema: ${theme||'Premium-Genuss'} | Hook: ${hook||''}
+Länge: ca. 1000-1400 Zeichen, 2-3 passende Emojis, KEINE Hashtags (kommen separat).`);
+    document.getElementById('post-caption').value = text.trim();
+    updateCharCount('post-caption');
+    toast('Caption generiert');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+async function aiGenerateHooks() {
+  const btn = document.getElementById('btn-ai-hooks');
+  const product = document.getElementById('post-product').value;
+  const theme = document.getElementById('post-theme').value;
+  const platform = document.getElementById('post-platform').value;
+  setLoading(btn,true);
+  try {
+    const {text} = await claudeAI('hook',
+      `Schreibe 5 verschiedene ${platform} Hooks für Vinella.
+Produkt: ${product||'Weinbrand-Trüffel'} | Thema: ${theme||'Premium-Genuss'}
+Max 60 Zeichen pro Hook. Format: 1. Hook\n2. Hook\n... Nur die Hooks, kein anderer Text.`);
+    document.getElementById('ai-result').innerHTML = `<div class="ai-result-box"><strong>5 Hooks:</strong><br><br>${text.replace(/\n/g,'<br>')}</div>`;
+    toast('Hooks generiert');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+async function aiGenerateHashtags() {
+  const btn = document.getElementById('btn-ai-hashtags');
+  const product = document.getElementById('post-product').value;
+  const platform = document.getElementById('post-platform').value;
+  const theme = document.getElementById('post-theme').value;
+  setLoading(btn,true);
+  try {
+    const {text} = await claudeAI('hashtags',
+      `Erstelle 20 optimale Hashtags für ${platform} für Vinella Feinkost.
+Produkt: ${product||'Weinbrand-Trüffel'} | Thema: ${theme||'Premium'}
+Mix aus deutschen und englischen Tags. Nur Hashtags getrennt durch Leerzeichen, kein anderer Text.`);
+    const tags = text.trim().split(/\s+/).filter(t=>t.startsWith('#')||t.length>1).map(t=>t.startsWith('#')?t:'#'+t);
+    document.getElementById('post-hashtags').value = tags.join(' ');
+    toast('Hashtags generiert');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+async function aiGenerateCTA() {
+  const btn = document.getElementById('btn-ai-cta');
+  const platform = document.getElementById('post-platform').value;
+  const product = document.getElementById('post-product').value;
+  setLoading(btn,true);
+  try {
+    const {text} = await claudeAI('cta',
+      `Schreibe 3 kurze Call-to-Action Sätze für ${platform} für Vinella Feinkost (${product||'Pralinen'}).
+Format: 1. CTA\n2. CTA\n3. CTA – kein anderer Text.`);
+    document.getElementById('ai-result').innerHTML = `<div class="ai-result-box"><strong>CTA-Varianten:</strong><br><br>${text.replace(/\n/g,'<br>')}</div>`;
+    toast('CTAs generiert');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+async function aiAnalyzeImage() {
+  if (!S.uploadedFileBase64) { toast('Zuerst ein Bild hochladen','warn'); return; }
+  const btn = document.getElementById('btn-ai-vision');
+  setLoading(btn,true);
+  try {
+    const r = await fetch('/api/claude/vision',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({imageBase64:S.uploadedFileBase64, mediaType:S.uploadedFileType, saveMode:S.saveMode})
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+    if(d.caption) { document.getElementById('post-caption').value=d.caption; updateCharCount('post-caption'); }
+    if(d.hooks?.[0]) { document.getElementById('post-hook').value=d.hooks[0]; updateCharCount('post-hook'); }
+    if(d.hashtags) document.getElementById('post-hashtags').value=d.hashtags.join(' ');
+    document.getElementById('ai-result').innerHTML = `<div class="ai-result-box">
+      <strong>🖼️ Bild-Analyse</strong><br><br>
+      <strong>Hooks:</strong><br>${(d.hooks||[]).map((h,i)=>`${i+1}. ${h}`).join('<br>')}<br><br>
+      <strong>Video-Prompt:</strong><br><em>${d.videoPrompt||'–'}</em>
+    </div>`;
+    toast('Bild analysiert – Felder ausgefüllt ✓');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+// ─── CHAR COUNTS ──────────────────────────────────────────────
+function updateCharCount(fieldId) {
+  const el = document.getElementById(fieldId);
+  const counter = document.getElementById(fieldId+'-count');
+  if (!el||!counter) return;
+  const platform = document.getElementById('post-platform')?.value||'Instagram';
+  let max=2200, warn=2000;
+  if (fieldId==='post-hook') { max=60; warn=50; }
+  else if (fieldId==='post-caption') {
+    if (platform==='YouTube') { max=5000; warn=4500; }
+    else if (platform==='Pinterest') { max=500; warn=400; }
+  }
+  const len = el.value.length;
+  counter.textContent = `${len}/${max}`;
+  counter.className = 'char-count '+(len>max?'danger':len>warn?'warn':'ok');
+}
+function updateAllCharCounts() { updateCharCount('post-caption'); updateCharCount('post-hook'); }
+
+// ─── WEEK PLAN ────────────────────────────────────────────────
+function getISOWeek(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+3-(d.getDay()+6)%7);
+  const w1 = new Date(d.getFullYear(),0,4);
+  return 1+Math.round(((d-w1)/86400000-3+(w1.getDay()+6)%7)/7);
+}
+
+function openWeekPlanModal() {
+  const now = new Date();
+  document.getElementById('wp-kw').value = getISOWeek(now);
+  document.getElementById('wp-year').value = now.getFullYear();
+  document.getElementById('wp-preview').innerHTML = '';
+  document.getElementById('btn-wp-save').style.display = 'none';
+  S.weekPlanPosts = [];
+  document.getElementById('modal-weekplan').classList.add('open');
+}
+
+async function generateWeekPlan() {
+  const btn = document.getElementById('btn-wp-generate');
+  setLoading(btn,true);
+  document.getElementById('wp-preview').innerHTML = '<div class="skeleton" style="height:80px">Wochenplan wird generiert...</div>';
+  document.getElementById('btn-wp-save').style.display = 'none';
+  try {
+    const d = {
+      kw:document.getElementById('wp-kw').value,
+      year:document.getElementById('wp-year').value,
+      instagram:document.getElementById('wp-instagram').value,
+      tiktok:document.getElementById('wp-tiktok').value,
+      youtube:document.getElementById('wp-youtube').value,
+      facebook:document.getElementById('wp-facebook').value,
+      pinterest:document.getElementById('wp-pinterest').value,
+      focusProduct:document.getElementById('wp-product').value,
+      theme:document.getElementById('wp-theme').value,
+      saveMode:S.saveMode
+    };
+    const result = await api('/api/generate-week','POST',d);
+    S.weekPlanPosts = result.posts;
+    document.getElementById('wp-preview').innerHTML = `
+      <div style="margin-bottom:10px;font-size:13px;color:var(--text2)">${result.posts.length} Posts generiert mit ${result.model}</div>
+      <table class="wp-table"><thead><tr><th>Datum</th><th>Plattform</th><th>Produkt</th><th>Hook</th><th>Zeit</th></tr></thead>
+      <tbody>${result.posts.map(p=>`<tr>
+        <td>${p.date}</td>
+        <td><span class="platform-badge" style="background:${PLATFORM_COLORS[p.platform]||'#8B3A2A'}">${p.platform}</span></td>
+        <td>${p.product||'–'}</td>
+        <td>${(p.hook||'').slice(0,45)}</td>
+        <td>${p.postingTime||'12:00'}</td>
+      </tr>`).join('')}</tbody></table>`;
+    document.getElementById('btn-wp-save').style.display = 'block';
+    toast(`${result.posts.length} Posts generiert`);
+  } catch(err) {
+    document.getElementById('wp-preview').innerHTML = '';
+    toast(err.message,'error');
+  }
+  setLoading(btn,false); updateCosts();
+}
+
+async function saveWeekPlan() {
+  if (!S.weekPlanPosts.length) return;
+  const btn = document.getElementById('btn-wp-save');
+  setLoading(btn,true);
+  try {
+    for (const post of S.weekPlanPosts) {
+      const saved = await api('/api/posts','POST',post);
+      S.posts.push(saved);
+    }
+    toast(`${S.weekPlanPosts.length} Posts in Kalender gespeichert ✓`);
+    document.getElementById('modal-weekplan').classList.remove('open');
+    navigate('kalender');
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false);
+}
+
+// ─── IDEAS ────────────────────────────────────────────────────
+function renderIdeas() {
+  const g = document.getElementById('ideas-grid');
+  if (!S.ideas.length) { g.innerHTML='<p class="empty-state">Noch keine Ideen. Klick auf "Neue Idee" oder lass die KI generieren.</p>'; return; }
+  g.innerHTML = S.ideas.map(i=>`
+    <div class="idea-card">
+      <div class="idea-header">
+        <strong>${i.title}</strong>
+        ${i.platform?`<span class="platform-badge" style="background:${PLATFORM_COLORS[i.platform]||'#8B3A2A'}">${i.platform}</span>`:''}
+      </div>
+      <p class="idea-text">${i.content}</p>
+      <div class="idea-actions">
+        <button class="btn btn-sm btn-primary" onclick="ideaToPost('${i.id}')">→ Post</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteIdea('${i.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function openNewIdeaModal() {
+  const title = prompt('Titel der Idee:');
+  if (!title) return;
+  const content = prompt('Beschreibung / Inhalt:');
+  if (!content) return;
+  addIdea(title, content);
+}
+
+async function addIdea(title, content, platform='') {
+  try {
+    const idea = await api('/api/ideas','POST',{title,content,platform});
+    S.ideas.push(idea); renderIdeas(); toast('Idee gespeichert');
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function deleteIdea(id) {
+  if (!confirm('Idee löschen?')) return;
+  try { await api(`/api/ideas/${id}`,'DELETE'); S.ideas=S.ideas.filter(i=>i.id!==id); renderIdeas(); toast('Idee gelöscht'); }
+  catch(err) { toast(err.message,'error'); }
+}
+
+function ideaToPost(id) {
+  const idea = S.ideas.find(i=>i.id===id); if(!idea) return;
+  navigate('kalender');
+  setTimeout(() => { openPostModal(null); document.getElementById('post-theme').value=idea.title; document.getElementById('post-caption').value=idea.content; }, 100);
+}
+
+async function generateIdeas() {
+  const btn = document.getElementById('btn-generate-ideas');
+  setLoading(btn,true);
+  try {
+    const {text} = await claudeAI('idea',
+      `Generiere 5 kreative Content-Ideen für Vinella Feinkost-Manufaktur aus der Pfalz.
+Für verschiedene Social-Media-Plattformen. Für jede Idee:
+TITEL: kurzer prägnanter Titel
+PLATTFORM: Instagram/TikTok/YouTube/Facebook/Pinterest
+INHALT: Beschreibung 2-3 Sätze
+---
+Kein anderer Text, nur die 5 Blöcke getrennt durch ---`);
+    const blocks = text.split('---').map(b=>b.trim()).filter(Boolean);
+    let added = 0;
+    for (const block of blocks) {
+      const t = block.match(/TITEL:\s*(.+)/)?.[1]?.trim();
+      const p = block.match(/PLATTFORM:\s*(.+)/)?.[1]?.trim();
+      const c = block.match(/INHALT:\s*([\s\S]+)/)?.[1]?.trim();
+      if (t && c) { await addIdea(t, c, p||''); added++; }
+    }
+    toast(`${added} Ideen generiert`);
+  } catch(err) { toast(err.message,'error'); }
+  setLoading(btn,false); updateCosts();
+}
+
+// ─── ANALYTICS ────────────────────────────────────────────────
+let charts = {};
+
+function renderAnalytics() {
+  const tbody = document.getElementById('analytics-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = !S.analytics.length
+    ? '<tr><td colspan="7" class="empty-state">Noch keine Daten erfasst</td></tr>'
+    : S.analytics.slice().reverse().map(a=>`<tr>
+        <td>${a.date||'–'}</td>
+        <td><span class="platform-badge" style="background:${PLATFORM_COLORS[a.platform]||'#8B3A2A'}">${a.platform||'–'}</span></td>
+        <td>${(a.reach||0).toLocaleString('de-DE')}</td>
+        <td>${(a.impressions||0).toLocaleString('de-DE')}</td>
+        <td>${a.engagement||0}%</td>
+        <td>${(a.followers||0).toLocaleString('de-DE')}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="deleteAnalytics('${a.id}')">🗑</button></td>
+      </tr>`).join('');
+  renderCharts();
+}
+
+function renderCharts() {
+  Object.values(charts).forEach(c=>c?.destroy()); charts={};
+  if (!S.analytics.length) return;
+
+  const byP={}; PLATFORMS.forEach(p=>byP[p]=0);
+  S.analytics.forEach(a=>{if(a.platform)byP[a.platform]=(byP[a.platform]||0)+Number(a.reach||0);});
+  const ctx1=document.getElementById('chart-reach');
+  if(ctx1) charts.reach=new Chart(ctx1,{type:'bar',data:{labels:PLATFORMS,datasets:[{label:'Reichweite',data:PLATFORMS.map(p=>byP[p]),backgroundColor:PLATFORMS.map(p=>PLATFORM_COLORS[p]),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+
+  const sorted=S.analytics.filter(a=>a.followers&&a.date).sort((a,b)=>a.date>b.date?1:-1);
+  const ctx2=document.getElementById('chart-followers');
+  if(ctx2&&sorted.length) charts.followers=new Chart(ctx2,{type:'line',data:{labels:sorted.map(a=>a.date),datasets:[{label:'Follower',data:sorted.map(a=>Number(a.followers)||0),borderColor:'#8B3A2A',backgroundColor:'rgba(139,58,42,0.1)',tension:.4,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+
+  const engP={},engN={};
+  S.analytics.forEach(a=>{if(a.platform&&a.engagement){engP[a.platform]=(engP[a.platform]||0)+Number(a.engagement);engN[a.platform]=(engN[a.platform]||0)+1;}});
+  const engL=Object.keys(engP);
+  const ctx3=document.getElementById('chart-engagement');
+  if(ctx3&&engL.length) charts.engagement=new Chart(ctx3,{type:'bar',data:{labels:engL,datasets:[{label:'Ø Engagement %',data:engL.map(p=>(engP[p]/engN[p]).toFixed(2)),backgroundColor:engL.map(p=>PLATFORM_COLORS[p]),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+
+async function addAnalyticsEntry() {
+  const d={
+    date:document.getElementById('an-date').value,
+    platform:document.getElementById('an-platform').value,
+    reach:Number(document.getElementById('an-reach').value)||0,
+    impressions:Number(document.getElementById('an-impressions').value)||0,
+    engagement:Number(document.getElementById('an-engagement').value)||0,
+    followers:Number(document.getElementById('an-followers').value)||0
+  };
+  if(!d.date||!d.platform){toast('Datum und Plattform ausfüllen','warn');return;}
+  try {
+    const entry=await api('/api/analytics','POST',d);
+    S.analytics.push(entry); renderAnalytics(); toast('Eintrag gespeichert');
+    ['an-reach','an-impressions','an-engagement','an-followers'].forEach(id=>document.getElementById(id).value='');
+  } catch(err){toast(err.message,'error');}
+}
+
+async function deleteAnalytics(id) {
+  if(!confirm('Eintrag löschen?'))return;
+  try{await api(`/api/analytics/${id}`,'DELETE');S.analytics=S.analytics.filter(a=>a.id!==id);renderAnalytics();toast('Gelöscht');}
+  catch(err){toast(err.message,'error');}
+}
+
+async function aiAnalyticsInsight() {
+  if(!S.analytics.length){toast('Zuerst Daten eintragen','warn');return;}
+  const btn=document.getElementById('btn-ai-insight');
+  setLoading(btn,true);
+  const summary=S.analytics.map(a=>`${a.date} ${a.platform}: Reichweite=${a.reach}, Engagement=${a.engagement}%, Follower=${a.followers}`).join('\n');
+  try {
+    const {text}=await claudeAI('strategy',`Analysiere diese Social-Media-Daten für Vinella und gib 4 konkrete strategische Empfehlungen:\n\n${summary}`);
+    document.getElementById('ai-insight-result').innerHTML=`<div class="card" style="margin-bottom:0"><div class="card-title">🤖 KI-Empfehlung</div><div style="font-size:13px;color:var(--text2);line-height:1.7">${text.replace(/\n/g,'<br>')}</div></div>`;
+    toast('Analyse abgeschlossen');
+  } catch(err){toast(err.message,'error');}
+  setLoading(btn,false); updateCosts();
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────
+const chatHist=[];
+async function sendChat() {
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim(); if(!msg)return;
+  input.value='';
+  addChatMsg('user',msg);
+  chatHist.push({role:'user',content:msg});
+  const btn=document.getElementById('btn-chat-send');
+  setLoading(btn,true);
+  try {
+    const {text}=await claudeAI('chat',msg,chatHist.slice(-12));
+    addChatMsg('assistant',text);
+    chatHist.push({role:'assistant',content:text});
+  } catch(err){toast(err.message,'error');}
+  setLoading(btn,false); updateCosts();
+}
+function addChatMsg(role,text) {
+  const c=document.getElementById('chat-messages');
+  const d=document.createElement('div'); d.className=`chat-msg chat-msg-${role}`;
+  d.innerHTML=`<div class="chat-bubble">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+function chatQuick(prompt) { document.getElementById('chat-input').value=prompt; sendChat(); }
+
+// ─── PDF EXPORT ───────────────────────────────────────────────
+function exportPDF() {
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const {year,month}=S.calendar;
+  doc.setFillColor(44,26,14); doc.rect(0,0,297,28,'F');
+  doc.setTextColor(200,131,42); doc.setFontSize(20); doc.setFont('helvetica','bold'); doc.text('VINELLA',14,14);
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.text('Content Studio – Monatsplan',14,21);
+  doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.text(`${MONTHS[month]} ${year}`,200,18);
+
+  const posts=S.posts.filter(p=>{
+    if(!p.date)return false;
+    const d=new Date(p.date); return d.getFullYear()===year&&d.getMonth()===month;
+  }).sort((a,b)=>a.date>b.date?1:-1);
+
+  if(!posts.length) {
+    doc.setTextColor(100); doc.setFontSize(12); doc.setFont('helvetica','normal');
+    doc.text('Keine Posts in diesem Monat geplant.',14,45);
+  } else {
+    doc.autoTable({
+      startY:34,
+      head:[['Datum','Plattform','Produkt','Thema / Hook','Caption','Status']],
+      body:posts.map(p=>[
+        p.date||'–', p.platform||'–', p.product||'–',
+        (p.theme||p.hook||'').slice(0,40),
+        (p.caption||'').slice(0,90)+((p.caption?.length||0)>90?'…':''),
+        p.status||'–'
+      ]),
+      theme:'grid',
+      headStyles:{fillColor:[139,58,42],textColor:255,fontStyle:'bold',fontSize:9},
+      bodyStyles:{fontSize:8,textColor:[26,26,26]},
+      alternateRowStyles:{fillColor:[237,230,214]},
+      styles:{cellPadding:3}
+    });
+  }
+
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i); doc.setFontSize(8); doc.setTextColor(154,138,122);
+    doc.text('Erstellt von Vinella Content Studio · vinella.de',14,202);
+    doc.text(`Seite ${i} / ${pages}`,265,202);
+  }
+  doc.save(`Vinella-Monatsplan-${MONTHS[month]}-${year}.pdf`);
+  toast('PDF wird heruntergeladen');
+}
+
+// ─── SAVE MODE ────────────────────────────────────────────────
+function toggleSaveMode() {
+  S.saveMode=!S.saveMode;
+  const btn=document.getElementById('btn-save-mode');
+  btn.textContent=S.saveMode?'💡 Spar-Modus: AN':'💡 Spar-Modus: AUS';
+  btn.classList.toggle('active',S.saveMode);
+  document.getElementById('model-display').textContent=S.saveMode?'Haiku aktiv (günstig)':'Sonnet 4 aktiv';
+  toast(S.saveMode?'Spar-Modus aktiv – Haiku wird genutzt':'Normal-Modus – Sonnet aktiv');
+}
+
+// ─── PROMPTS ──────────────────────────────────────────────────
+function renderPrompts(cat='Alle') {
+  S.activePromptCat=cat;
+  const cats=['Alle',...new Set(PROMPT_DATA.map(p=>p.cat))];
+  document.getElementById('prompt-cats').innerHTML=cats.map(c=>`<button class="cat-btn${S.activePromptCat===c?' active':''}" onclick="renderPrompts('${c}')">${c}</button>`).join('');
+  const filtered=cat==='Alle'?PROMPT_DATA:PROMPT_DATA.filter(p=>p.cat===cat);
+  document.getElementById('prompts-grid').innerHTML=filtered.map(p=>`
+    <div class="prompt-card">
+      <span class="prompt-cat-tag">${p.cat}</span>
+      <div class="prompt-card-title">${p.title}</div>
+      <div class="prompt-card-desc">${p.desc}</div>
+      <div class="prompt-text">${p.text}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-primary" onclick="copyPrompt(this,'${encodeURIComponent(p.text)}')">📋 Kopieren</button>
+        <button class="btn btn-sm btn-ghost" onclick="sendPromptToChat('${encodeURIComponent(p.text)}')">💬 Im Chat öffnen</button>
+      </div>
+    </div>`).join('');
+}
+
+function copyPrompt(btn, encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded)).then(()=>{
+    const t=btn.textContent; btn.textContent='✓ Kopiert!';
+    setTimeout(()=>btn.textContent=t,2000);
+  });
+}
+function sendPromptToChat(encoded) {
+  navigate('chat');
+  setTimeout(()=>{document.getElementById('chat-input').value=decodeURIComponent(encoded);},150);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    const [posts,analytics,ideas]=await Promise.all([api('/api/posts'),api('/api/analytics'),api('/api/ideas')]);
+    S.posts=posts; S.analytics=analytics; S.ideas=ideas;
+  } catch(err) { toast('Verbindung zum Server fehlgeschlagen','error'); }
+  document.getElementById('an-date').value=new Date().toISOString().split('T')[0];
+  navigate('kalender');
+  updateCosts();
+}
+
+init();
+</script>
+</body>
+</html>
